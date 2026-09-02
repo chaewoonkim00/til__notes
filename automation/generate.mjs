@@ -8,6 +8,15 @@ import { nextFileNo } from './lib/fileno.mjs';
 
 const VALID_CATS = ['TECH', 'SCIENCE', 'HISTORY', 'CULTURE', 'BUSINESS', 'LIFESTYLE'];
 
+// Windows 폴더명에 못 쓰는 문자를 제거한다 (사용자 로컬 폴더와 그대로 맞춰 쓰기 위함).
+function sanitizeFolderName(text) {
+  return text
+    .replace(/[<>:"/\\|?*\x00-\x1F]/g, '')
+    .trim()
+    .replace(/[. ]+$/, '')
+    .slice(0, 60);
+}
+
 function withDefaults(card) {
   return {
     type: card.type,
@@ -37,7 +46,7 @@ async function main() {
 
   const draft = await getDraft(topic.text);
   const category = VALID_CATS.includes(draft.category) ? draft.category : 'LIFESTYLE';
-  const fileno = await nextFileNo();
+  const fileno = await nextFileNo(category);
   const cards = draft.cards.map(withDefaults);
 
   const credits = [];
@@ -53,8 +62,8 @@ async function main() {
   console.log(`카드 ${cards.length}장 렌더링 중...`);
   const pngDataUrls = await renderCards({ category, fileno, cards });
 
-  const date = new Date().toISOString().slice(0, 10);
-  const dir = path.resolve('output', `${date}-${category}-${fileno}`);
+  // 사용자가 studio.html로 수동 작업할 때 쓰는 로컬 폴더 구조(카테고리/번호_주제)와 맞춘다.
+  const dir = path.resolve('output', category, `${fileno}_${sanitizeFolderName(topic.text)}`);
   await fs.mkdir(dir, { recursive: true });
 
   await Promise.all(

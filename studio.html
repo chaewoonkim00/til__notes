@@ -6,7 +6,7 @@
 <title>TIL Notes Studio</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Nanum+Gothic+Coding:wght@400;700&family=Nanum+Myeongjo:wght@400;700;800&family=Song+Myung&family=Gowun+Batang:wght@400;700&family=Gowun+Dodum&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Nanum+Gothic+Coding:wght@400;700&family=Nanum+Myeongjo:wght@400;700;800&family=Noto+Serif+KR:wght@400;700&family=Gowun+Batang:wght@400;700&family=Gowun+Dodum&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
   --ink:#0C0A12; --panel:#15121D; --panel2:#1D1927; --line:#2C2637;
@@ -214,7 +214,7 @@ const CATS = {
          ovTop:.20, ovBot:.90, sumOv:.86, outOv:.80, outro:'다음 관찰도 함께'},
   HISTORY:{word:'FILE', acc:'#FAC775', bg:'#2B1A06', bar:'#3D2610', sub:'#E8CFA6',
          imgBg:'#4A3520', note:'#B08A55',
-         font:`'Song Myung',Georgia,serif`, wTitle:400, wBody:400,
+         font:`'Noto Serif KR',Georgia,serif`, wTitle:400, wBody:400,
          ovTop:.20, ovBot:.90, sumOv:.87, outOv:.82, outro:'다음 파일도 열어보기'},
   CULTURE:{word:'Chapter', acc:'#ED93B1', bg:'#2A1620', bar:'#3B2030', sub:'#EBD2DC',
          imgBg:'#4A2436', note:'#A87089',
@@ -1189,7 +1189,7 @@ $('#applyJson').onclick=()=>{
 /* 시작 — 서체가 다 내려온 뒤에 그려야 미리보기와 파일이 같아집니다 */
 renderEditor(); draw();
 (async()=>{
-  const fams=['Nanum Gothic Coding','Nanum Myeongjo','Song Myung',
+  const fams=['Nanum Gothic Coding','Nanum Myeongjo','Noto Serif KR',
               'Gowun Batang','Gowun Dodum','IBM Plex Sans KR'];
   const jobs=[];
   fams.forEach(f=>[400,500,600,700,800].forEach(w=>

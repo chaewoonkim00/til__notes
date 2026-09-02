@@ -27,7 +27,7 @@ export async function renderCards({ category, fileno, cards }) {
     // 모든 카테고리 폰트를 명시적으로 로드해서 기본 폰트로 대체되는 걸 막는다.
     const fontStatus = await page.evaluate(async () => {
       const fams = [
-        'Nanum Gothic Coding', 'Nanum Myeongjo', 'Song Myung',
+        'Nanum Gothic Coding', 'Nanum Myeongjo', 'Noto Serif KR',
         'Gowun Batang', 'Gowun Dodum', 'IBM Plex Sans KR',
       ];
       const weights = [400, 500, 600, 700, 800];
