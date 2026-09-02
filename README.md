@@ -35,7 +35,7 @@
 ### 1. Notion
 1. [notion.so/my-integrations](https://www.notion.so/my-integrations)에서 내부 통합(internal integration)을 만들고 토큰을 복사합니다.
 2. "Today You Learned" 페이지 우측 상단 `···` → `Connections`에서 방금 만든 통합을 연결합니다(공유해야 API로 읽고 쓸 수 있습니다).
-3. 페이지 URL에서 32자리 ID를 복사합니다 (예: `https://www.notion.so/Today-You-Learned-2be23d6ed0b98095b74fe06adf5f8cfa` → `2be23d6ed0b98095b74fe06adf5f8cfa`).
+3. 페이지 URL 끝의 32자리 문자열이 페이지 ID입니다 (예: `https://www.notion.so/Today-You-Learned-<32자리 ID>` → `<32자리 ID>` 부분).
 4. 페이지 하단에 `IDEA`라는 제목(Heading) 아래 주제 목록이 있어야 합니다. 지금처럼 체크박스가 없는
    일반 목록이어도 됩니다 — 자동화가 처음 실행될 때 각 항목을 체크박스(할 일) 블록으로 자동 변환합니다.
 
