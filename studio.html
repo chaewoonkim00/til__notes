@@ -1,0 +1,1203 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TIL Notes Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nanum+Gothic+Coding:wght@400;700&family=Nanum+Myeongjo:wght@400;700;800&family=Song+Myung&family=Gowun+Batang:wght@400;700&family=Gowun+Dodum&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0C0A12; --panel:#15121D; --panel2:#1D1927; --line:#2C2637;
+  --tx:#E6E1F0; --tx2:#9A93AC; --tx3:#655D78;
+  --acc:#B49BE0;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ink);color:var(--tx);
+  font:400 14px/1.55 -apple-system,BlinkMacSystemFont,'Pretendard','Apple SD Gothic Neo','Malgun Gothic',sans-serif;}
+button,input,select,textarea{font:inherit;color:inherit}
+
+/* ---------- shell ---------- */
+header{padding:20px 24px;border-bottom:1px solid var(--line);display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+header h1{margin:0;font-size:15px;font-weight:600;letter-spacing:.5px}
+header .sub{font-size:12px;color:var(--tx3)}
+main{display:grid;grid-template-columns:minmax(0,1fr) 500px;gap:0;align-items:start}
+@media(max-width:1200px){main{grid-template-columns:minmax(0,1fr) 400px}}
+@media(max-width:900px){main{grid-template-columns:1fr}}
+.left{padding:24px;min-width:0}
+.right{padding:24px;border-left:1px solid var(--line);position:sticky;top:0;max-height:100vh;overflow-y:auto}
+@media(max-width:900px){.right{border-left:0;border-top:1px solid var(--line);position:static;max-height:none}}
+
+/* ---------- steps ---------- */
+.step{margin-bottom:28px}
+.step-h{display:flex;align-items:center;gap:9px;margin-bottom:12px}
+.step-n{width:20px;height:20px;border-radius:50%;background:var(--acc);color:#1D1630;
+  font-size:11px;font-weight:700;display:grid;place-items:center;flex:none}
+.step-t{font-size:13px;font-weight:600;letter-spacing:.3px}
+.hint{font-size:12px;color:var(--tx3);margin:0 0 12px}
+
+/* ---------- controls ---------- */
+label{display:block;font-size:11px;color:var(--tx2);margin-bottom:5px;letter-spacing:.3px}
+input[type=text],textarea,select{
+  width:100%;background:var(--panel);border:1px solid var(--line);border-radius:7px;
+  padding:9px 11px;font-size:13px;outline:none}
+input:focus,textarea:focus,select:focus{border-color:var(--acc)}
+textarea{resize:vertical;min-height:62px;line-height:1.55}
+select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--tx2) 50%),linear-gradient(135deg,var(--tx2) 50%,transparent 50%);
+  background-position:calc(100% - 15px) 50%,calc(100% - 10px) 50%;background-size:5px 5px;background-repeat:no-repeat;padding-right:32px}
+.btn{background:var(--acc);color:#1D1630;border:0;border-radius:7px;padding:9px 16px;
+  font-size:13px;font-weight:600;cursor:pointer}
+.btn:disabled{opacity:.45;cursor:default}
+.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--tx)}
+.btn.sm{padding:5px 10px;font-size:11px;font-weight:500;border-radius:6px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end}
+.row>*{flex:1;min-width:0}
+.row>.fixed{flex:none}
+
+/* ---------- card editor ---------- */
+.cards{display:flex;flex-direction:column;gap:10px;margin-top:6px}
+.ce{border:1px solid var(--line);border-radius:10px;background:var(--panel);overflow:hidden}
+.ce-h{display:flex;align-items:center;gap:8px;padding:9px 11px;background:var(--panel2);cursor:pointer}
+.ce-idx{font-size:11px;color:var(--tx3);font-variant-numeric:tabular-nums;flex:none;width:20px}
+.ce-ty{font-size:11px;font-weight:600;color:var(--acc);letter-spacing:.5px;flex:none}
+.ce-pv{font-size:12px;color:var(--tx2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}
+.ce-ops{display:flex;gap:3px;flex:none}
+.iconbtn{background:transparent;border:0;color:var(--tx3);cursor:pointer;padding:3px 6px;
+  font-size:13px;border-radius:5px;line-height:1}
+.iconbtn:hover{color:var(--tx);background:var(--line)}
+.ce-b{padding:12px;display:none;flex-direction:column;gap:11px;border-top:1px solid var(--line)}
+.ce.open .ce-b{display:flex}
+.imgslot{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.imgslot .thumb{width:38px;height:47px;border-radius:5px;background:var(--panel2);
+  border:1px dashed var(--line);flex:none;background-size:cover;background-position:center}
+.imgslot .thumb.has{border-style:solid}
+.imgslot .thumb{cursor:pointer}
+.imgslot .thumb:focus{outline:2px solid var(--acc);outline-offset:2px}
+.fileinput{display:none}
+.charc{font-size:10px;color:var(--tx3);text-align:right;margin-top:3px}
+.charc.over{color:#E8836F}
+.cbrow{display:flex;align-items:center;gap:6px;margin-top:6px;font-size:11px;color:var(--tx2);cursor:pointer}
+.cbrow input{width:13px;height:13px;accent-color:var(--acc);margin:0;cursor:pointer}
+
+/* ---------- help tooltip ---------- */
+.help{position:relative;display:inline-flex;align-items:center;justify-content:center;
+  width:14px;height:14px;border-radius:50%;background:var(--line);color:var(--tx2);
+  font-size:10px;font-weight:700;cursor:help;margin-left:5px;vertical-align:middle;outline:none}
+.help:hover,.help:focus{background:var(--acc);color:#1D1630}
+.help-pop{display:none;position:absolute;left:0;top:20px;z-index:30;width:270px;
+  background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:12px 13px;
+  font-size:11px;line-height:1.65;color:var(--tx2);box-shadow:0 10px 28px rgba(0,0,0,.45);
+  white-space:normal;cursor:default}
+.help:hover .help-pop,.help:focus .help-pop,.help-pop:hover{display:block}
+.help-pop b{color:var(--acc);font-weight:700}
+.help-pop .rule{display:block;margin-top:8px;padding-top:8px;border-top:1px solid var(--line);color:var(--tx3)}
+
+/* ---------- preview ---------- */
+.pv-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.pv-h h2{margin:0;font-size:12px;font-weight:600;letter-spacing:.5px;color:var(--tx2)}
+.pv-list{display:flex;flex-direction:column;gap:14px}
+.pv-item{position:relative}
+.pv-item canvas{width:100%;border-radius:10px;display:block;background:var(--panel)}
+.pv-dl{position:absolute;right:9px;bottom:9px;opacity:0;transition:opacity .15s}
+.pv-dl2{position:absolute;right:9px;bottom:42px;opacity:0;transition:opacity .15s}
+.pv-item:hover .pv-dl,.pv-dl:focus,.pv-item:hover .pv-dl2,.pv-dl2:focus{opacity:1}
+@media(hover:none){.pv-dl,.pv-dl2,.pv-hint{opacity:1}}
+.pv-cap{position:absolute;top:7px;left:9px;font-size:9px;letter-spacing:1px;color:rgba(255,255,255,.5);
+  background:rgba(0,0,0,.4);padding:2px 6px;border-radius:4px;pointer-events:none}
+.pv-hint{position:absolute;top:7px;right:9px;font-size:9px;color:rgba(255,255,255,.45);
+  background:rgba(0,0,0,.4);padding:2px 6px;border-radius:4px;pointer-events:none;opacity:0;transition:opacity .15s}
+.pv-item:hover .pv-hint{opacity:1}
+.empty{border:1px dashed var(--line);border-radius:10px;padding:26px 16px;text-align:center;
+  font-size:12px;color:var(--tx3);line-height:1.6}
+.status{font-size:12px;color:var(--tx2);margin-top:10px;min-height:17px}
+.status.err{color:#E8836F}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>TIL Notes Studio</h1>
+  <span class="sub">주제를 적으면 초안이 나옵니다. 고치고, 사진을 넣고, 내려받으세요.</span>
+  <span style="flex:1"></span>
+  <button class="btn ghost sm" id="saveProj">작업 저장</button>
+  <button class="btn ghost sm" id="loadProj">작업 불러오기</button>
+  <input type="file" id="loadFile" accept="application/json" style="display:none">
+</header>
+
+<main>
+<div class="left">
+
+  <!-- STEP 1 -->
+  <section class="step">
+    <div class="step-h"><span class="step-n">1</span><span class="step-t">오늘의 이야기</span></div>
+    <p class="hint">궁금했던 것을 한 줄로 적고 버튼을 누르면 프롬프트가 복사됩니다. AI 챗봇에 붙여넣고, 돌아온 JSON을 아래에 붙여넣어 초안을 완성하세요.</p>
+    <div class="row">
+      <div><input type="text" id="topic" placeholder="예) 조부모님께 드리는 첫 용돈은 얼마가 적당할까"></div>
+      <div class="fixed"><button class="btn" id="gen">프롬프트 복사</button></div>
+    </div>
+    <div class="status" id="genStatus"></div>
+    <div id="manualBox" style="display:none;margin-top:10px">
+      <div class="row" style="margin-bottom:8px">
+        <div class="fixed"><button class="btn ghost sm" id="copyPrompt">프롬프트 다시 복사</button></div>
+        <div class="fixed"><button class="btn ghost sm" id="applyJson">붙여넣은 JSON 적용</button></div>
+      </div>
+      <textarea id="jsonBox" placeholder="AI에게 프롬프트를 주고, 돌아온 JSON을 여기에 붙여넣으세요." style="min-height:90px"></textarea>
+    </div>
+  </section>
+
+  <!-- STEP 2 -->
+  <section class="step">
+    <div class="step-h"><span class="step-n">2</span><span class="step-t">장표 다듬기</span></div>
+    <div class="row" style="margin-bottom:14px">
+      <div>
+        <label>카테고리 <span class="help" tabindex="0">?
+          <span class="help-pop">
+            <b>TECH</b> 기술 제품·소프트웨어·IT 시스템의 작동 원리<br>
+            <b>SCIENCE</b> 자연 현상, 생물·우주·물리·화학 등 과학적 발견과 원리<br>
+            <b>HISTORY</b> 사건·제도의 기원과 유래, 시대적 배경, 역사적 변천 과정<br>
+            <b>CULTURE</b> 사회 제도·도시 시스템·관습·언어·대중문화 등 사회적 약속과 상징<br>
+            <b>BUSINESS</b> 산업·기업·금융, 시장이 돌아가는 원리<br>
+            <b>LIFESTYLE</b> 일상에서 바로 마주치는 실용적 궁금증, 생활 팁, 개인의 선택
+            <span class="rule">판단 기준: "왜 이렇게 만들어졌나·무엇을 상징하나"→HISTORY/CULTURE, "최신 기술이 어떻게 동작하나"→TECH, "당장 생활에 써먹을 정보"→LIFESTYLE. 애매하면 신문의 어느 섹션에 실릴지로 판단.</span>
+          </span>
+        </span></label>
+        <select id="cat"></select>
+      </div>
+      <div class="fixed" style="width:110px">
+        <label>번호</label>
+        <input type="text" id="fileno" value="001" maxlength="4">
+      </div>
+    </div>
+    <div class="cards" id="cards"></div>
+    <div class="row" style="margin-top:12px">
+      <div class="fixed"><button class="btn ghost sm" data-add="body">＋ 본문</button></div>
+      <div class="fixed"><button class="btn ghost sm" data-add="takeaway">＋ Key Takeaway</button></div>
+      <div class="fixed"><button class="btn ghost sm" data-add="outro">＋ 마무리</button></div>
+    </div>
+  </section>
+  <!-- STEP 3 -->
+  <section class="step" id="captionStep" style="display:none">
+    <div class="step-h"><span class="step-n">3</span><span class="step-t">인스타 캡션</span></div>
+    <p class="hint">초안과 함께 받은 캡션입니다. 필요하면 고친 뒤 복사해서 쓰세요.</p>
+    <textarea id="captionBox" style="min-height:160px"></textarea>
+    <div class="row" style="margin-top:8px">
+      <div class="fixed"><button class="btn ghost sm" id="copyCaption">캡션 복사</button></div>
+    </div>
+    <div class="status" id="captionStatus"></div>
+  </section>
+
+</div>
+
+<div class="right">
+  <div class="pv-h">
+    <h2>미리보기</h2>
+    <button class="btn sm" id="dlAll">전체 내려받기</button>
+  </div>
+  <div class="pv-list" id="preview"></div>
+</div>
+</main>
+
+<script>
+/* ============================================================
+   1. 카테고리 토큰 — Notion 스펙과 동일
+   ============================================================ */
+const SANS="-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Malgun Gothic',sans-serif";
+const CATS = {
+  TECH: {word:'FILE', acc:'#5DCAA5', bg:'#0F1418', bar:'#17252C', sub:'#A8BBC4',
+         imgBg:'#212E36', note:'#5E7683',
+         font:`'Nanum Gothic Coding',ui-monospace,Menlo,monospace`, wTitle:700, wBody:400,
+         ovTop:.35, ovBot:.93, sumOv:.88, outOv:.82, outro:'$ follow --for-more'},
+  SCIENCE:{word:'NOTE', acc:'#97C459', bg:'#132608', bar:'#20390F', sub:'#CBDDB2',
+         imgBg:'#2C4318', note:'#7A9160',
+         font:`'Nanum Myeongjo',Georgia,serif`, wTitle:800, wBody:400,
+         ovTop:.20, ovBot:.90, sumOv:.86, outOv:.80, outro:'다음 관찰도 함께'},
+  HISTORY:{word:'FILE', acc:'#FAC775', bg:'#2B1A06', bar:'#3D2610', sub:'#E8CFA6',
+         imgBg:'#4A3520', note:'#B08A55',
+         font:`'Song Myung',Georgia,serif`, wTitle:400, wBody:400,
+         ovTop:.20, ovBot:.90, sumOv:.87, outOv:.82, outro:'다음 파일도 열어보기'},
+  CULTURE:{word:'Chapter', acc:'#ED93B1', bg:'#2A1620', bar:'#3B2030', sub:'#EBD2DC',
+         imgBg:'#4A2436', note:'#A87089',
+         font:`'Gowun Batang',Georgia,serif`, wTitle:700, wBody:400,
+         ovTop:.10, ovBot:.88, sumOv:.85, outOv:.78, outro:'다음 이야기 보러가기'},
+  BUSINESS:{word:'REPORT', acc:'#7FB3E8', bg:'#0E1A2B', bar:'#182B42', sub:'#B6CBE0',
+         imgBg:'#20344C', note:'#6C8AAB',
+         font:`'IBM Plex Sans KR',${SANS}`, wTitle:600, wBody:400,
+         ovTop:.28, ovBot:.92, sumOv:.88, outOv:.83, outro:'다음 리포트 받아보기'},
+  LIFESTYLE:{word:'Q', acc:'#B49BE0', bg:'#1D1630', bar:'#2B2145', sub:'#CFC4E6',
+         imgBg:'#332748', note:'#8B7BA8',
+         font:`'Gowun Dodum',${SANS}`, wTitle:400, wBody:400,
+         ovTop:.22, ovBot:.90, sumOv:.88, outOv:.82, outro:'다음 질문도 함께'}
+};
+const NOTE_MAX=28;        // 각주 상한 (한 줄에 들어가는 길이)
+const HANDLE='@til_notes', TAGLINE='궁금한 걸 찾아보고 정리합니다';
+
+/* 1080×1350 기준 좌표 — 미리보기와 내려받기가 같은 함수를 씁니다 */
+const W=1080, H=1350, PAD=86, IMGH=1008, BARH=342;
+
+function fam(c){ return c.font; }
+function rgba(hex,a){
+  const n=parseInt(hex.slice(1),16);
+  return `rgba(${n>>16&255},${n>>8&255},${n&255},${a})`;
+}
+
+/* ============================================================
+   2. 텍스트 조판 유틸
+   ============================================================ */
+function wrap(ctx,text,maxW,maxLines){
+  const out=[];
+  for(const para of String(text||'').split('\n')){
+    let line='';
+    for(const ch of para){
+      if(ctx.measureText(line+ch).width>maxW && line){ out.push(line); line=ch; }
+      else line+=ch;
+      if(maxLines && out.length>=maxLines) break;
+    }
+    if(line) out.push(line);
+    if(maxLines && out.length>=maxLines) break;
+  }
+  return maxLines?out.slice(0,maxLines):out;
+}
+function ellipsize(ctx,text,maxW){
+  let t=String(text||'');
+  if(ctx.measureText(t).width<=maxW) return t;
+  while(t.length && ctx.measureText(t+'…').width>maxW) t=t.slice(0,-1);
+  return t+'…';
+}
+function track(ctx,text,x,y,sp){          // 자간 있는 라벨용
+  let cx=x;
+  for(const ch of String(text)){ ctx.fillText(ch,cx,y); cx+=ctx.measureText(ch).width+sp; }
+  return cx-x-sp;
+}
+function trackW(ctx,text,sp){
+  let w=0; for(const ch of String(text)) w+=ctx.measureText(ch).width+sp;
+  return w-sp;
+}
+function withLabel(text,on,word){
+  text=text||''; if(!text) return '';
+  return on ? `${word}: ${text}` : text;
+}
+/* 이미지 위에 얹히는 텍스트를 어떤 배경에서도 읽히게 그림자를 줍니다 */
+function shadowed(ctx,fn){
+  ctx.save();
+  ctx.shadowColor='rgba(0,0,0,.6)'; ctx.shadowBlur=10; ctx.shadowOffsetY=2;
+  fn();
+  ctx.restore();
+}
+
+/* 이미지를 영역에 꽉 채워 그립니다(cover). scale이 1보다 크면 확대됩니다 */
+function drawCover(ctx,img,x,y,w,h,off,scale){
+  const r=Math.max(w/img.width,h/img.height)*(scale||1);
+  const dw=img.width*r, dh=img.height*r;
+  // 사진을 끌어 옮겨도 빈 곳이 생기지 않도록 이동 범위를 가둡니다
+  const maxX=Math.max(0,(dw-w)/2), maxY=Math.max(0,(dh-h)/2);
+  const ox=Math.max(-maxX,Math.min(maxX,(off&&off.x)||0));
+  const oy=Math.max(-maxY,Math.min(maxY,(off&&off.y)||0));
+  ctx.save(); ctx.beginPath(); ctx.rect(x,y,w,h); ctx.clip();
+  ctx.drawImage(img,x+(w-dw)/2+ox,y+(h-dh)/2+oy,dw,dh); ctx.restore();
+}
+/* 마무리 장표의 tyl 워드마크 — 프로필 아이콘과 같은 비율 */
+const MARK_FONT=`'Gowun Batang',Georgia,serif`;
+function tylMark(ctx,cx,cy,base,acc){
+  const spec=[
+    {ch:'t',size:base,       dy:base*0.025, fill:'#fff'},
+    {ch:'y',size:base*1.15,  dy:base*0.09,  fill:acc},
+    {ch:'l',size:base,       dy:base*0.025, fill:'#fff'}
+  ];
+  const tracking=-base*0.095;
+  const widths=spec.map(s=>{ ctx.font=`700 ${s.size}px ${MARK_FONT}`;
+    return ctx.measureText(s.ch).width; });
+  const total=widths.reduce((a,b)=>a+b,0)+tracking*(spec.length-1);
+  let x=cx-total/2;
+  const prev=ctx.textAlign; ctx.textAlign='left';
+  spec.forEach((s,i)=>{
+    ctx.font=`700 ${s.size}px ${MARK_FONT}`; ctx.fillStyle=s.fill;
+    ctx.fillText(s.ch,x,cy+s.dy+s.size*0.34);
+    x+=widths[i]+tracking;
+  });
+  ctx.textAlign=prev;
+}
+function placeholder(ctx,c,x,y,w,h){
+  ctx.fillStyle=c.imgBg; ctx.fillRect(x,y,w,h);
+  ctx.fillStyle=rgba(c.acc,.16); ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.font=`400 34px ${fam(c)}`;
+  ctx.fillText('사진을 넣어주세요',x+w/2,y+h/2);
+  ctx.textAlign='left'; ctx.textBaseline='alphabetic';
+}
+
+/* ============================================================
+   3. 카드 렌더러
+   ============================================================ */
+function render(cv,card,catKey,fileno,pageNo,total){
+  const c=CATS[catKey], ctx=cv.getContext('2d');
+  cv.width=W; cv.height=H;
+  ctx.fillStyle=c.bg; ctx.fillRect(0,0,W,H);
+  ctx.textBaseline='alphabetic';
+
+  if(card.type==='cover')    return drawCover_(ctx,card,c,catKey,fileno);
+  if(card.type==='body')     return drawBody(ctx,card,c,fileno,pageNo,total);
+  if(card.type==='takeaway') return drawTake(ctx,card,c);
+  if(card.type==='outro')    return drawOutro(ctx,card,c);
+}
+
+/* --- 표지 --- */
+function drawCover_(ctx,card,c,catKey,fileno){
+  if(card.img) drawCover(ctx,card.img,0,0,W,H,card.imgOff,card.imgScale); else placeholder(ctx,c,0,0,W,H);
+  const g=ctx.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,rgba(c.bg,Math.min(.92,c.ovTop+.30)));
+  g.addColorStop(.38,rgba(c.bg,c.ovTop+.10));
+  g.addColorStop(1,rgba(c.bg,c.ovBot));
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+
+  // 상단 라벨 + 구분선
+  shadowed(ctx,()=>{
+    ctx.fillStyle=c.acc; ctx.font=`500 36px ${fam(c)}`;
+    track(ctx,`${catKey} · ${fileno}`,PAD,PAD+42,9);
+  });
+  ctx.fillStyle=rgba(c.acc,.32); ctx.fillRect(PAD,PAD+91,W-PAD*2,2);
+
+  // 제목 (최대 2줄) + 부제
+  ctx.font=`${c.wTitle} 109px ${fam(c)}`;
+  const lines=wrap(ctx,card.title,W-PAD*2,2);
+  const lh=142;
+  const SUB_FS=49, SUB_INDENT=7;              // 부제를 아주 살짝 오른쪽으로
+  const titleH=(lines.length-1)*lh;
+  const bottomEdge=H-PAD;
+  let y;
+  if(card.sub){
+    // 제목 블록 아래 남는 공간 한가운데에 부제를 놓습니다
+    const reserve=SUB_FS*2.95;              // 값이 클수록 제목과 부제가 벌어집니다
+    y=bottomEdge-reserve-titleH;
+    const gapTop=y+titleH+ (109*0.28);      // 제목 마지막 줄 시각적 하단
+    const subY=gapTop+(bottomEdge-gapTop)/2 + SUB_FS*0.32;
+    ctx.fillStyle='#fff';
+    lines.forEach((l,i)=>ctx.fillText(l,PAD,y+i*lh));
+    ctx.fillStyle=c.acc; ctx.font=`400 ${SUB_FS}px ${fam(c)}`;
+    ctx.fillText(ellipsize(ctx,card.sub,W-PAD*2-SUB_INDENT),PAD+SUB_INDENT,subY);
+  }else{
+    y=bottomEdge-titleH-14;
+    ctx.fillStyle='#fff';
+    lines.forEach((l,i)=>ctx.fillText(l,PAD,y+i*lh));
+  }
+}
+
+/* --- 본문 --- */
+function drawBody(ctx,card,c,fileno,pageNo,total){
+  if(card.img) drawCover(ctx,card.img,0,0,W,IMGH,card.imgOff,card.imgScale); else placeholder(ctx,c,0,0,W,IMGH);
+  const g=ctx.createLinearGradient(0,0,0,IMGH);
+  g.addColorStop(0,rgba(c.bg,c.ovTop));
+  g.addColorStop(.45,rgba(c.bg,c.ovTop));
+  g.addColorStop(1,rgba(c.bg,c.ovBot));
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,IMGH);
+
+  // 상단 라벨 — 그림자로 어떤 사진 위에서도 읽히게
+  shadowed(ctx,()=>{
+    ctx.fillStyle=c.acc; ctx.font=`500 36px ${fam(c)}`;
+    track(ctx,`${c.word} ${fileno}`,PAD,PAD+22,7);
+    const pg=`${String(pageNo).padStart(2,'0')} / ${String(total).padStart(2,'0')}`;
+    track(ctx,pg,W-PAD-trackW(ctx,pg,7),PAD+22,7);
+  });
+
+  // 사진 출처 — 페이지 번호 바로 아래
+  const photoSrcTxt=withLabel(card.photoSrc,card.photoSrcLabel!==false,'사진 출처');
+  if(photoSrcTxt){
+    shadowed(ctx,()=>{
+      ctx.fillStyle=rgba(c.acc,.75); ctx.font=`${c.wBody} 26px ${fam(c)}`;
+      const s=ellipsize(ctx,photoSrcTxt,420);
+      ctx.fillText(s,W-PAD-ctx.measureText(s).width,PAD+68);
+    });
+  }
+
+  // 이미지 위 제목 — 반드시 한 줄
+  ctx.font=`${c.wTitle} 86px ${fam(c)}`; ctx.fillStyle='#fff';
+  ctx.fillText(ellipsize(ctx,card.title,W-PAD*2),PAD,IMGH-64);
+
+  // 하단 바
+  ctx.fillStyle=c.bar; ctx.fillRect(0,IMGH,W,BARH);
+
+  const hasFoot = !!card.note;
+  const FOOT_GAP = 46;                   // 본문 마지막 줄과 각주 사이 여백
+  const FOOT_FS = 34;
+  const FS=46, LH=74;                    // 본문 글자·행간
+  ctx.font=`${c.wBody} ${FS}px ${fam(c)}`;
+  const lines=wrap(ctx,card.text,W-PAD*2,card.note?3:4);
+
+  // 본문과 각주를 한 덩어리로 보고 바 정중앙에 놓습니다 — 본문 출처는 이 계산에 관여하지 않습니다
+  const textH=(lines.length-1)*LH+FS;
+  const blockH=textH+(hasFoot?FOOT_GAP+FOOT_FS:0);
+  const blockTop=IMGH+(BARH-blockH)/2;
+  let y=blockTop+FS;
+  const fy=blockTop+textH+FOOT_GAP+FOOT_FS;
+  ctx.fillStyle=c.sub;
+  lines.forEach((l,i)=>ctx.fillText(l,PAD,y+i*LH));
+
+  // 각주
+  if(card.note){
+    ctx.fillStyle=c.note; ctx.font=`${c.wBody} ${FOOT_FS}px ${fam(c)}`;
+    ctx.fillText(ellipsize(ctx,card.note,W-PAD*2),PAD,fy);
+  }
+
+  // 본문 출처 — 텍스트 영역 우측 하단 고정 (본문 위치와 무관)
+  const textSrcTxt=withLabel(card.textSrc,card.textSrcLabel!==false,'본문 출처');
+  if(textSrcTxt){
+    ctx.fillStyle=c.note; ctx.font=`${c.wBody} 26px ${fam(c)}`;
+    const s=ellipsize(ctx,textSrcTxt,W-PAD*2);
+    ctx.fillText(s,W-PAD-ctx.measureText(s).width,H-32);
+  }
+}
+
+/* --- Key Takeaway --- */
+function drawTake(ctx,card,c){
+  if(card.img) drawCover(ctx,card.img,0,0,W,H,card.imgOff,card.imgScale); else placeholder(ctx,c,0,0,W,H);
+  ctx.fillStyle=rgba(c.bg,c.sumOv); ctx.fillRect(0,0,W,H);
+
+  const LH=138, GAP=140;              // 라벨과 결론 사이 간격
+  ctx.font=`${c.wTitle} 97px ${fam(c)}`;
+  const lines=wrap(ctx,card.text,W-PAD*2,3);
+  const srcLines = card.src ? wrap(ctx,card.src,W-PAD*2,3) : [];
+
+  // 결론 텍스트 자체를 카드 정중앙에 놓습니다
+  const linesH=(lines.length-1)*LH;
+  const yFirst=H/2-linesH/2+97*0.25;
+
+  ctx.fillStyle=c.acc; ctx.font=`500 36px ${fam(c)}`;
+  track(ctx,'KEY TAKEAWAY',PAD,yFirst-GAP,9);
+
+  ctx.fillStyle='#fff'; ctx.font=`${c.wTitle} 97px ${fam(c)}`;
+  lines.forEach((l,i)=>ctx.fillText(l,PAD,yFirst+i*LH));
+
+  if(srcLines.length){
+    ctx.fillStyle=c.note; ctx.font=`${c.wBody} 38px ${fam(c)}`;
+    srcLines.forEach((l,i)=>ctx.fillText(l,PAD,yFirst+linesH+72+i*58));
+  }
+}
+
+/* --- 마무리 --- */
+function drawOutro(ctx,card,c){
+  if(card.img) drawCover(ctx,card.img,0,0,W,H,card.imgOff,card.imgScale); else placeholder(ctx,c,0,0,W,H);
+  ctx.fillStyle=rgba(c.bg,c.outOv); ctx.fillRect(0,0,W,H);
+
+  const cx=W/2; let y=H/2-154;
+  tylMark(ctx,cx,y,170,c.acc);
+  ctx.textAlign='center';
+  ctx.fillStyle='#fff'; ctx.font=`${c.wTitle} 71px ${fam(c)}`;
+  ctx.fillText(card.text||c.outro,cx,y+195);
+  ctx.fillStyle=c.acc; ctx.font=`500 56px ${fam(c)}`;
+  if('letterSpacing' in ctx) ctx.letterSpacing='4px';
+  ctx.fillText(HANDLE,cx,y+285);
+  if('letterSpacing' in ctx) ctx.letterSpacing='0px';
+  ctx.fillStyle=c.sub; ctx.font=`400 45px ${fam(c)}`;
+  ctx.fillText(TAGLINE,cx,y+363);
+  ctx.textAlign='left';
+}
+
+/* ============================================================
+   4. 상태
+   ============================================================ */
+const TYPE_LABEL={cover:'표지',body:'본문',takeaway:'KEY TAKEAWAY',outro:'마무리'};
+let state={
+  cat:'LIFESTYLE', fileno:'001', caption:'',
+  cards:[ blank('cover'), blank('body'), blank('takeaway'), blank('outro') ]
+};
+function blank(type){
+  return {type,title:'',sub:'',text:'',note:'',photoSrc:'',textSrc:'',photoKeyword:'',
+    photoSrcLabel:true,textSrcLabel:true,src:'',img:null,imgUrl:'',imgOff:null,imgScale:1};
+}
+/* 파일 선택이든 클립보드 붙여넣기든 이 함수 하나로 카드에 사진을 적용합니다 */
+function loadImageIntoCard(card,file){
+  if(!file){ return; }
+  if(file.type && file.type.indexOf('image')===-1){
+    const st=$('#genStatus'); st.className='status err';
+    st.textContent='이미지 파일이 아닙니다.';
+    return;
+  }
+  const reader=new FileReader();
+  reader.onload=()=>{
+    const im=new Image();
+    im.onload=()=>{
+      card.img=im; card.imgUrl=reader.result;
+      card.imgOff=null; card.imgScale=1;    // 새 사진은 위치·확대를 초기화합니다
+      renderEditor(); draw();
+    };
+    im.onerror=()=>{
+      const st=$('#genStatus'); st.className='status err';
+      st.textContent='사진을 불러오지 못했습니다. 다른 파일로 다시 시도해주세요.';
+    };
+    im.src=reader.result;
+  };
+  reader.onerror=()=>{
+    const st=$('#genStatus'); st.className='status err';
+    st.textContent='사진 파일을 읽지 못했습니다.';
+  };
+  reader.readAsDataURL(file);
+}
+
+/* ============================================================
+   5. 에디터 UI
+   ============================================================ */
+const $=s=>document.querySelector(s);
+const catSel=$('#cat');
+Object.keys(CATS).forEach(k=>{
+  const o=document.createElement('option'); o.value=k; o.textContent=k; catSel.appendChild(o);
+});
+catSel.value=state.cat;
+catSel.onchange=()=>{ state.cat=catSel.value; document.documentElement.style.setProperty('--acc',CATS[state.cat].acc); draw(); };
+$('#fileno').oninput=e=>{ state.fileno=e.target.value||'001'; draw(); };
+document.documentElement.style.setProperty('--acc',CATS[state.cat].acc);
+
+const FIELDS={
+  cover:[['title','제목','textarea','두 줄까지 들어갑니다. 줄바꿈은 Enter'],
+         ['sub','부제','text',''],
+         ['photoKeyword','사진 검색어 (선택)','text','예) 서울 버스정류장 표지판 / seoul bus stop sign']],
+  body:[['title','제목 (한 줄)','text','10~12자를 넘기면 뒤가 잘립니다'],
+        ['text','본문','textarea','각주가 있으면 3줄, 없으면 4줄까지 나옵니다'],
+        ['note','각주 (선택)','text','본문에서 다 못 담은 설명'],
+        ['photoKeyword','사진 검색어 (선택)','text','예) 4자리 버스 번호판 / bus route number sign'],
+        ['photoSrc','사진 출처 (선택)','text','예) Unsplash, 2026','photoSrcLabel','"사진 출처: " 자동으로 붙이기'],
+        ['textSrc','본문 출처 (선택)','text','예) KB국민은행, 2026','textSrcLabel','"본문 출처: " 자동으로 붙이기']],
+  takeaway:[['text','한 줄 결론','textarea','줄바꿈은 Enter'],
+            ['photoKeyword','사진 검색어 (선택)','text','예) 도시 야경 버스 / city night bus'],
+            ['src','출처 모음 (선택)','textarea','']],
+  outro:[['text','문구','text','비워두면 카테고리 기본 문구가 들어갑니다']]
+};
+
+function renderEditor(){
+  const box=$('#cards'); box.innerHTML='';
+  state.cards.forEach((card,i)=>{
+    const el=document.createElement('div');
+    el.className='ce'+(card._open?' open':'');
+    const needsImg = card.type!=='outro' || true;
+
+    const head=document.createElement('div');
+    head.className='ce-h';
+    head.innerHTML=`<span class="ce-idx">${String(i+1).padStart(2,'0')}</span>
+      <span class="ce-ty">${TYPE_LABEL[card.type]}</span>
+      <span class="ce-pv">${(card.title||card.text||'비어 있음').replace(/\n/g,' ').slice(0,40)}</span>`;
+    const ops=document.createElement('div'); ops.className='ce-ops';
+    ops.innerHTML=`<button class="iconbtn" data-mv="-1" title="위로">↑</button>
+      <button class="iconbtn" data-mv="1" title="아래로">↓</button>
+      <button class="iconbtn" data-del="1" title="삭제">×</button>`;
+    head.appendChild(ops);
+    head.onclick=e=>{
+      if(e.target.dataset.mv){ move(i,+e.target.dataset.mv); return; }
+      if(e.target.dataset.del){ state.cards.splice(i,1); renderEditor(); draw(); return; }
+      card._open=!card._open; renderEditor();
+    };
+
+    const body=document.createElement('div'); body.className='ce-b';
+
+    // 유형 바꾸기
+    const tw=document.createElement('div');
+    tw.innerHTML='<label>유형</label>';
+    const ts=document.createElement('select');
+    Object.keys(TYPE_LABEL).forEach(t=>{
+      const o=document.createElement('option'); o.value=t; o.textContent=TYPE_LABEL[t];
+      if(t===card.type)o.selected=true; ts.appendChild(o);
+    });
+    ts.onchange=()=>{ card.type=ts.value; renderEditor(); draw(); };
+    tw.appendChild(ts); body.appendChild(tw);
+
+    // 필드
+    const refresh=[];
+    FIELDS[card.type].forEach(([key,label,kind,ph,cbKey,cbLabel])=>{
+      const w=document.createElement('div');
+      w.innerHTML=`<label>${label}</label>`;
+      const inp=document.createElement(kind==='textarea'?'textarea':'input');
+      if(kind!=='textarea') inp.type='text';
+      inp.value=card[key]||''; inp.placeholder=ph;
+      inp.oninput=()=>{ card[key]=inp.value; draw(); refresh.forEach(f=>f()); };
+      w.appendChild(inp);
+
+      // 넘겨도 입력은 막지 않고 빨갛게만 알려줍니다
+      let limitOf=null;
+      if(card.type==='body'){
+        if(key==='title') limitOf=()=>12;
+        else if(key==='note') limitOf=()=>NOTE_MAX;
+      }
+      if(limitOf){
+        const cc=document.createElement('div'); cc.className='charc';
+        const upd=()=>{ const L=limitOf();
+          cc.textContent=`${inp.value.length} / ${L}자`;
+          cc.classList.toggle('over',inp.value.length>L); };
+        upd(); refresh.push(upd); w.appendChild(cc);
+      }
+
+      // 사진 출처 / 본문 출처 옆의 자동 접두어 체크박스
+      if(cbKey){
+        const cbRow=document.createElement('label'); cbRow.className='cbrow';
+        const cb=document.createElement('input'); cb.type='checkbox';
+        cb.checked=card[cbKey]!==false;
+        cb.onchange=()=>{ card[cbKey]=cb.checked; draw(); };
+        const span=document.createElement('span'); span.textContent=cbLabel;
+        cbRow.append(cb,span); w.appendChild(cbRow);
+      }
+      body.appendChild(w);
+    });
+
+    // 사진
+    const iw=document.createElement('div');
+    iw.innerHTML='<label>사진 (1080×1350 권장)</label>';
+    const slot=document.createElement('div'); slot.className='imgslot';
+    const th=document.createElement('div');
+    th.className='thumb'+(card.imgUrl?' has':'');
+    th.tabIndex=0;
+    th.title='클릭한 뒤 Ctrl+V(맥은 ⌘V)로 캡처한 이미지를 붙여넣을 수 있습니다';
+    if(card.imgUrl) th.style.backgroundImage=`url(${card.imgUrl})`;
+    th.onpaste=e=>{
+      const items=(e.clipboardData||window.clipboardData)?.items;
+      if(!items) return;
+      for(const item of items){
+        if(item.kind==='file' && item.type.indexOf('image')!==-1){
+          e.preventDefault();
+          loadImageIntoCard(card,item.getAsFile());
+          break;
+        }
+      }
+    };
+    const fi=document.createElement('input'); fi.type='file'; fi.accept='image/*'; fi.className='fileinput';
+    const pick=document.createElement('button'); pick.className='btn ghost sm'; pick.textContent=card.imgUrl?'바꾸기':'고르기';
+    pick.onclick=()=>fi.click();
+    fi.onchange=()=>{ loadImageIntoCard(card,fi.files[0]); };
+    slot.append(th,pick,fi);
+    const pasteHint=document.createElement('div');
+    pasteHint.style.cssText='font-size:10px;color:var(--tx3);flex-basis:100%;margin-top:2px';
+    pasteHint.textContent='화면 캡처 후 썸네일을 클릭하고 Ctrl+V로도 붙여넣을 수 있어요.';
+    slot.appendChild(pasteHint);
+    if(card.imgUrl){
+      const rm=document.createElement('button'); rm.className='btn ghost sm'; rm.textContent='비우기';
+      rm.onclick=()=>{ card.img=null; card.imgUrl=''; card.imgOff=null; card.imgScale=1; renderEditor(); draw(); };
+      slot.appendChild(rm);
+    }
+    iw.appendChild(slot); body.appendChild(iw);
+
+    el.append(head,body); box.appendChild(el);
+  });
+}
+/* 본문 카드끼리만 세어 페이지 번호를 매깁니다 (표지·마무리·요약은 카운트에서 제외) */
+function bodyPageInfo(i){
+  const card=state.cards[i];
+  const bodyTotal=state.cards.filter(c=>c.type==='body').length;
+  if(card.type!=='body') return {pageNo:1,total:bodyTotal||1};
+  let idx=0;
+  for(let k=0;k<=i;k++){ if(state.cards[k].type==='body') idx++; }
+  return {pageNo:idx,total:bodyTotal};
+}
+function move(i,d){
+  const j=i+d; if(j<0||j>=state.cards.length) return;
+  [state.cards[i],state.cards[j]]=[state.cards[j],state.cards[i]];
+  renderEditor(); draw();
+}
+document.querySelectorAll('[data-add]').forEach(b=>{
+  b.onclick=()=>{ state.cards.push(blank(b.dataset.add)); renderEditor(); draw(); };
+});
+function updatePreviewText(){}
+
+/* ============================================================
+   6. 미리보기 · 내려받기
+   ============================================================ */
+function draw(){
+  const box=$('#preview'); box.innerHTML='';
+  if(!state.cards.length){
+    box.innerHTML='<div class="empty">장표가 없습니다.<br>아래 버튼으로 추가해 주세요.</div>'; return;
+  }
+  state.cards.forEach((card,i)=>{
+    const {pageNo,total}=bodyPageInfo(i);
+    const it=document.createElement('div'); it.className='pv-item';
+    const cv=document.createElement('canvas');
+    render(cv,card,state.cat,state.fileno,pageNo,total);
+
+    // 사진이 있으면: 드래그(한 손가락)=이동, 휠 또는 두 손가락 핀치=확대·축소
+    const cap=document.createElement('div'); cap.className='pv-cap';
+    cap.textContent=`${String(i+1).padStart(2,'0')} ${TYPE_LABEL[card.type]}`;
+
+    let hint=null;
+    if(card.img){
+      hint=document.createElement('div'); hint.className='pv-hint';
+      hint.textContent='드래그: 위치 이동 · 휠/두 손가락: 확대·축소';
+
+      cv.style.touchAction='none';
+      cv.style.cursor='grab';
+
+      const pointers=new Map();     // 활성 포인터(손가락) 추적
+      let panBase=null;             // {sx,sy,offX,offY} — 한 손가락 이동 기준값
+      let pinchBase=null;           // {dist,scale} — 두 손가락 확대 기준값
+      const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+
+      cv.onpointerdown=e=>{
+        e.preventDefault();
+        cv.setPointerCapture(e.pointerId);
+        pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+        if(pointers.size===1){
+          cv.style.cursor='grabbing';
+          const p=[...pointers.values()][0];
+          panBase={sx:p.x,sy:p.y,offX:(card.imgOff&&card.imgOff.x)||0,offY:(card.imgOff&&card.imgOff.y)||0};
+          pinchBase=null;
+        }else if(pointers.size===2){
+          panBase=null;
+          const pts=[...pointers.values()];
+          pinchBase={dist:dist(pts[0],pts[1]),scale:card.imgScale||1};
+        }
+      };
+      cv.onpointermove=e=>{
+        if(!pointers.has(e.pointerId)) return;
+        pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+        const scaleF=W/cv.clientWidth;
+        if(pointers.size===2 && pinchBase){
+          const pts=[...pointers.values()];
+          const ratio=dist(pts[0],pts[1])/pinchBase.dist;
+          card.imgScale=Math.min(4,Math.max(1,pinchBase.scale*ratio));
+          render(cv,card,state.cat,state.fileno,pageNo,total);
+        }else if(pointers.size===1 && panBase){
+          const p=[...pointers.values()][0];
+          card.imgOff={x:panBase.offX+(p.x-panBase.sx)*scaleF, y:panBase.offY+(p.y-panBase.sy)*scaleF};
+          render(cv,card,state.cat,state.fileno,pageNo,total);
+        }
+      };
+      const endPointer=e=>{
+        pointers.delete(e.pointerId);
+        if(pointers.size===1){
+          // 손가락 하나가 남으면 그 지점을 새 이동 기준으로 삼습니다
+          const p=[...pointers.values()][0];
+          panBase={sx:p.x,sy:p.y,offX:(card.imgOff&&card.imgOff.x)||0,offY:(card.imgOff&&card.imgOff.y)||0};
+          pinchBase=null;
+        }else if(pointers.size===0){
+          panBase=null; pinchBase=null; cv.style.cursor='grab';
+        }
+      };
+      cv.onpointerup=endPointer; cv.onpointercancel=endPointer;
+
+      cv.addEventListener('wheel',e=>{
+        e.preventDefault();
+        const delta=-e.deltaY/500;   // 위로 스크롤(휠 밀기)하면 확대
+        card.imgScale=Math.min(4,Math.max(1,(card.imgScale||1)+delta));
+        render(cv,card,state.cat,state.fileno,pageNo,total);
+      },{passive:false});
+
+      cv.ondblclick=()=>{
+        card.imgOff=null; card.imgScale=1;
+        render(cv,card,state.cat,state.fileno,pageNo,total);
+      };
+    }
+
+    const dl=document.createElement('button');
+    dl.className='btn sm pv-dl'; dl.textContent='PNG';
+    dl.onclick=()=>saveCard(i);
+    const dlsvg=document.createElement('button');
+    dlsvg.className='btn ghost sm pv-dl2'; dlsvg.textContent='Figma용 SVG';
+    dlsvg.onclick=()=>saveSVG(i);
+    it.append(cv,cap,dl,dlsvg);
+    if(hint) it.appendChild(hint);
+    box.appendChild(it);
+  });
+}
+function fileName(i){
+  return `til_${state.cat}_${state.fileno}_${String(i+1).padStart(2,'0')}.png`;
+}
+/* 캔버스를 파일로 저장합니다. blob이 막히면 data URL로 다시 시도합니다. */
+/* ============================================================
+   6b. Figma용 SVG 내보내기 — 텍스트가 편집 가능한 레이어로 들어갑니다
+   ============================================================ */
+const _mctx=document.createElement('canvas').getContext('2d');
+function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function svgText(x,y,text,{size,weight=400,fill,spacing=0,fontFamily}){
+  const ff=(fontFamily||'').split(',')[0].replace(/['"]/g,'').trim();
+  return `<text x="${x}" y="${y.toFixed(1)}" font-family="${esc(ff)}" font-size="${size}" font-weight="${weight}" fill="${fill}"${spacing?` letter-spacing="${spacing}"`:''}>${esc(text)}</text>`;
+}
+function buildSVG(card,catKey,fileno,pageNo,total){
+  const c=CATS[catKey], ff=fam(c);
+  const els=[]; const defs=[];
+  els.push(`<rect width="${W}" height="${H}" fill="${c.bg}"/>`);
+
+  const clipId='clip'+Math.random().toString(36).slice(2);
+  if(card.img && card.imgUrl){
+    const ih = card.type==='body' ? IMGH : H;
+    defs.push(`<clipPath id="${clipId}"><rect width="${W}" height="${ih}"/></clipPath>`);
+    // cover fit 계산
+    const iw=card.img.width, ihh=card.img.height, r=Math.max(W/iw,ih/ihh)*(card.imgScale||1);
+    const dw=iw*r, dh=ihh*r;
+    const maxX=Math.max(0,(dw-W)/2), maxY=Math.max(0,(dh-ih)/2);
+    const off=card.imgOff||{x:0,y:0};
+    const ox=Math.max(-maxX,Math.min(maxX,off.x||0));
+    const oy=Math.max(-maxY,Math.min(maxY,off.y||0));
+    const dx=(W-dw)/2+ox, dy=(ih-dh)/2+oy;
+    els.push(`<image href="${card.imgUrl}" x="${dx.toFixed(1)}" y="${dy.toFixed(1)}" width="${dw.toFixed(1)}" height="${dh.toFixed(1)}" clip-path="url(#${clipId})" preserveAspectRatio="none"/>`);
+  }
+
+  if(card.type==='cover'||card.type==='takeaway'||card.type==='outro'){
+    const ov = card.type==='takeaway'?c.sumOv:card.type==='outro'?c.outOv:c.ovBot;
+    if(!(card.img&&card.imgUrl)) els.push(`<rect width="${W}" height="${H}" fill="${c.bg}"/>`);
+    else els.push(`<rect width="${W}" height="${H}" fill="${c.bg}" opacity="${ov}"/>`);
+  }
+  if(card.type==='body'){
+    if(!(card.img&&card.imgUrl)) els.push(`<rect width="${W}" height="${IMGH}" fill="${c.imgBg}"/>`);
+    const gid='g'+Math.random().toString(36).slice(2);
+    defs.push(`<linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="${c.bg}" stop-opacity="${c.ovTop}"/>
+      <stop offset="45%" stop-color="${c.bg}" stop-opacity="${c.ovTop}"/>
+      <stop offset="100%" stop-color="${c.bg}" stop-opacity="${c.ovBot}"/></linearGradient>`);
+    els.push(`<rect width="${W}" height="${IMGH}" fill="url(#${gid})"/>`);
+  }
+
+  if(card.type==='cover'){
+    _mctx.font=`500 36px ${ff}`;
+    els.push(svgText(PAD,PAD+42,`${catKey} · ${fileno}`,{size:36,weight:500,fill:c.acc,spacing:9,fontFamily:ff}));
+    els.push(`<rect x="${PAD}" y="${PAD+91}" width="${W-PAD*2}" height="2" fill="${c.acc}" opacity=".32"/>`);
+    _mctx.font=`${c.wTitle} 109px ${ff}`;
+    const lines=wrap(_mctx,card.title,W-PAD*2,2);
+    const lh=142, bottomEdge=H-PAD, titleH=(lines.length-1)*lh;
+    let y;
+    if(card.sub){
+      const reserve=49*2.95;
+      y=bottomEdge-reserve-titleH;
+      lines.forEach((l,i)=>els.push(svgText(PAD,y+i*lh,l,{size:109,weight:c.wTitle,fill:'#fff',fontFamily:ff})));
+      const gapTop=y+titleH+109*0.28, subY=gapTop+(bottomEdge-gapTop)/2+49*0.32;
+      _mctx.font=`400 49px ${ff}`;
+      els.push(svgText(PAD+7,subY,ellipsize(_mctx,card.sub,W-PAD*2-7),{size:49,weight:400,fill:c.acc,fontFamily:ff}));
+    }else{
+      y=bottomEdge-titleH-14;
+      lines.forEach((l,i)=>els.push(svgText(PAD,y+i*lh,l,{size:109,weight:c.wTitle,fill:'#fff',fontFamily:ff})));
+    }
+  }
+
+  if(card.type==='body'){
+    _mctx.font=`500 36px ${ff}`;
+    els.push(svgText(PAD,PAD+22,`${c.word} ${fileno}`,{size:36,weight:500,fill:c.acc,spacing:7,fontFamily:ff}));
+    const pg=`${String(pageNo).padStart(2,'0')} / ${String(total).padStart(2,'0')}`;
+    els.push(svgText(W-PAD-trackW(_mctx,pg,7),PAD+22,pg,{size:36,weight:500,fill:c.acc,spacing:7,fontFamily:ff}));
+
+    const photoSrcTxt=withLabel(card.photoSrc,card.photoSrcLabel!==false,'사진 출처');
+    if(photoSrcTxt){
+      _mctx.font=`${c.wBody} 26px ${ff}`;
+      const s=ellipsize(_mctx,photoSrcTxt,420);
+      els.push(svgText(W-PAD-_mctx.measureText(s).width,PAD+68,s,{size:26,weight:c.wBody,fill:c.acc,fontFamily:ff}));
+    }
+
+    _mctx.font=`${c.wTitle} 86px ${ff}`;
+    els.push(svgText(PAD,IMGH-64,ellipsize(_mctx,card.title,W-PAD*2),{size:86,weight:c.wTitle,fill:'#fff',fontFamily:ff}));
+
+    els.push(`<rect x="0" y="${IMGH}" width="${W}" height="${BARH}" fill="${c.bar}"/>`);
+
+    const hasFoot=!!card.note;
+    const FOOT_GAP=46, FOOT_FS=34, FS=46, LH=74;
+    _mctx.font=`${c.wBody} ${FS}px ${ff}`;
+    const lines=wrap(_mctx,card.text,W-PAD*2,card.note?3:4);
+    const textH=(lines.length-1)*LH+FS;
+    const blockH=textH+(hasFoot?FOOT_GAP+FOOT_FS:0);
+    const blockTop=IMGH+(BARH-blockH)/2;
+    let y=blockTop+FS;
+    const fy=blockTop+textH+FOOT_GAP+FOOT_FS;
+    lines.forEach((l,i)=>els.push(svgText(PAD,y+i*LH,l,{size:FS,weight:c.wBody,fill:c.sub,fontFamily:ff})));
+    if(card.note){
+      _mctx.font=`${c.wBody} ${FOOT_FS}px ${ff}`;
+      els.push(svgText(PAD,fy,ellipsize(_mctx,card.note,W-PAD*2),{size:FOOT_FS,weight:c.wBody,fill:c.note,fontFamily:ff}));
+    }
+
+    const textSrcTxt=withLabel(card.textSrc,card.textSrcLabel!==false,'본문 출처');
+    if(textSrcTxt){
+      _mctx.font=`${c.wBody} 26px ${ff}`;
+      const s=ellipsize(_mctx,textSrcTxt,W-PAD*2);
+      els.push(svgText(W-PAD-_mctx.measureText(s).width,H-32,s,{size:26,weight:c.wBody,fill:c.note,fontFamily:ff}));
+    }
+  }
+
+  if(card.type==='takeaway'){
+    const LH=138, GAP=140;
+    _mctx.font=`${c.wTitle} 97px ${ff}`;
+    const lines=wrap(_mctx,card.text,W-PAD*2,3);
+    const srcLines=card.src?wrap(_mctx,card.src,W-PAD*2,3):[];
+    const linesH=(lines.length-1)*LH;
+    const yFirst=H/2-linesH/2+97*0.25;
+    els.push(svgText(PAD,yFirst-GAP,'KEY TAKEAWAY',{size:36,weight:500,fill:c.acc,spacing:9,fontFamily:ff}));
+    lines.forEach((l,i)=>els.push(svgText(PAD,yFirst+i*LH,l,{size:97,weight:c.wTitle,fill:'#fff',fontFamily:ff})));
+    if(srcLines.length){
+      srcLines.forEach((l,i)=>els.push(svgText(PAD,yFirst+linesH+72+i*58,l,{size:38,weight:c.wBody,fill:c.note,fontFamily:ff})));
+    }
+  }
+
+  if(card.type==='outro'){
+    const cx=W/2; let y=H/2-154, base=170;
+    const spec=[
+      {ch:'t',size:base,      dy:base*0.025, fill:'#fff'},
+      {ch:'y',size:base*1.15, dy:base*0.09,  fill:c.acc},
+      {ch:'l',size:base,      dy:base*0.025, fill:'#fff'}
+    ];
+    const tracking=-base*0.095;
+    const widths=spec.map(s=>{ _mctx.font=`700 ${s.size}px ${MARK_FONT}`;
+      return _mctx.measureText(s.ch).width; });
+    const total=widths.reduce((a,b)=>a+b,0)+tracking*(spec.length-1);
+    let mx=cx-total/2;
+    spec.forEach((s,i)=>{
+      els.push(`<text x="${mx.toFixed(1)}" y="${(y+s.dy+s.size*0.34).toFixed(1)}" font-family="Gowun Batang" font-size="${s.size.toFixed(1)}" font-weight="700" fill="${s.fill}">${s.ch}</text>`);
+      mx+=widths[i]+tracking;
+    });
+    els.push(svgText(cx,y+195,card.text||c.outro,{size:71,weight:c.wTitle,fill:'#fff',fontFamily:ff}).replace('<text ','<text text-anchor="middle" '));
+    els.push(svgText(cx,y+285,HANDLE,{size:56,weight:500,fill:c.acc,spacing:4,fontFamily:ff}).replace('<text ','<text text-anchor="middle" '));
+    els.push(svgText(cx,y+363,TAGLINE,{size:45,weight:400,fill:c.sub,fontFamily:ff}).replace('<text ','<text text-anchor="middle" '));
+  }
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
+<defs>${defs.join('')}</defs>
+${els.join('\n')}
+</svg>`;
+}
+function saveSVG(i){
+  const card=state.cards[i];
+  const {pageNo,total}=bodyPageInfo(i);
+  const svg=buildSVG(card,state.cat,state.fileno,pageNo,total);
+  const blob=new Blob([svg],{type:'image/svg+xml'});
+  const url=URL.createObjectURL(blob);
+  const name=`til_${state.cat}_${state.fileno}_${String(i+1).padStart(2,'0')}.svg`;
+  try{
+    const a=document.createElement('a'); a.href=url; a.download=name;
+    document.body.appendChild(a); a.click(); a.remove();
+  }catch(e){
+    const w=window.open(); if(w) w.location.href=url;
+  }
+  setTimeout(()=>URL.revokeObjectURL(url),4000);
+}
+
+/* ============================================================
+   6c. 작업 저장 · 불러오기 — 글과 사진을 파일 하나에 담습니다
+   ============================================================ */
+$('#saveProj').onclick=()=>{
+  const data={
+    version:1, savedAt:new Date().toISOString(),
+    cat:state.cat, fileno:state.fileno, topic:$('#topic').value, caption:state.caption||'',
+    cards:state.cards.map(c=>({
+      type:c.type, title:c.title, sub:c.sub, text:c.text,
+      note:c.note, photoSrc:c.photoSrc, textSrc:c.textSrc, photoKeyword:c.photoKeyword||'',
+      photoSrcLabel:c.photoSrcLabel, textSrcLabel:c.textSrcLabel,
+      imgOff:c.imgOff||null, imgScale:c.imgScale||1, imgUrl:c.imgUrl||''      // 사진은 파일 안에 그대로 담깁니다
+    }))
+  };
+  const blob=new Blob([JSON.stringify(data)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download=`til_${state.cat}_${state.fileno}.json`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),4000);
+  const st=$('#genStatus'); st.className='status';
+  st.textContent='작업을 저장했습니다. 이 파일을 불러오면 사진까지 그대로 돌아옵니다.';
+};
+$('#loadProj').onclick=()=>$('#loadFile').click();
+$('#loadFile').onchange=e=>{
+  const f=e.target.files[0]; if(!f) return;
+  const st=$('#genStatus');
+  const r=new FileReader();
+  r.onload=()=>{
+    try{
+      const d=JSON.parse(r.result);
+      if(!d.cards) throw new Error('형식이 맞지 않습니다');
+      if(CATS[d.cat]){ state.cat=d.cat; catSel.value=d.cat;
+        document.documentElement.style.setProperty('--acc',CATS[d.cat].acc); }
+      state.fileno=d.fileno||'001'; $('#fileno').value=state.fileno;
+      if(d.topic) $('#topic').value=d.topic;
+      state.caption=d.caption||''; renderCaption();
+
+      state.cards=d.cards.map(c=>{
+        const merged=Object.assign(blank(c.type),c,{img:null});
+        if(c.src && !c.photoSrc) merged.photoSrc=c.src;  // 이전 저장 파일 호환
+        return merged;
+      });
+      renderEditor(); draw();
+
+      // 사진 복원
+      let pending=0;
+      state.cards.forEach(c=>{
+        if(!c.imgUrl) return;
+        pending++;
+        const im=new Image();
+        im.onload=()=>{ c.img=im; if(--pending===0){ renderEditor(); draw(); } };
+        im.onerror=()=>{ if(--pending===0){ renderEditor(); draw(); } };
+        im.src=c.imgUrl;
+      });
+      st.className='status';
+      st.textContent='작업을 불러왔습니다.';
+    }catch(err){
+      st.className='status err';
+      st.textContent='불러오지 못했습니다 ('+err.message+').';
+    }
+    e.target.value='';
+  };
+  r.readAsText(f);
+};
+
+function saveCard(i){
+  const cv=document.createElement('canvas');
+  const {pageNo,total}=bodyPageInfo(i);
+  render(cv,state.cards[i],state.cat,state.fileno,pageNo,total);
+  const name=fileName(i);
+  try{
+    cv.toBlob(b=>{
+      if(!b) return fallback();
+      const url=URL.createObjectURL(b);
+      if(!clickLink(url,name)) fallback();
+      setTimeout(()=>URL.revokeObjectURL(url),4000);
+    },'image/png');
+  }catch(e){ fallback(); }
+
+  function fallback(){
+    try{
+      const data=cv.toDataURL('image/png');
+      if(clickLink(data,name)) return;
+      const w=window.open(); if(w) w.document.write(`<img src="${data}" style="width:100%">`);
+    }catch(e){
+      const st=$('#genStatus'); st.className='status err';
+      st.textContent='이 화면에서는 저장이 막혀 있습니다. 파일을 내려받아 브라우저에서 직접 열어주세요.';
+    }
+  }
+  function clickLink(href,n){
+    try{
+      const a=document.createElement('a'); a.href=href; a.download=n;
+      document.body.appendChild(a); a.click(); a.remove(); return true;
+    }catch(e){ return false; }
+  }
+}
+$('#dlAll').onclick=()=>{
+  const st=$('#genStatus'); st.className='status';
+  st.textContent='파일을 내려받는 중입니다. 브라우저 다운로드 팝업을 허용해주세요.';
+  let pending=state.cards.length;
+  state.cards.forEach((_,i)=>{
+    setTimeout(()=>{
+      saveCard(i);
+      if(--pending===0) {
+        st.textContent=`${state.cards.length}개 파일 내려받기 완료!`;
+      }
+    }, i*1200);  // 1.2초 간격으로 순차 처리
+  });
+};
+
+/* ============================================================
+   7. 초안 만들기
+   ============================================================ */
+function buildPrompt(topic){
+  return `너는 "Today You Learned"라는 인스타그램 카드뉴스 매거진의 편집자다.
+주제: "${topic}"
+
+이 주제로 카드뉴스 초안을 만들어라. 규칙:
+
+- 카테고리는 아래 여섯 가지 중 주제와 가장 부합하는 것 하나만 고른다:
+  · TECH — 기술 제품, 소프트웨어·인터넷 서비스, IT/공학 시스템의 작동 원리
+  · SCIENCE — 자연 현상, 생물·우주·물리·화학 등 과학적 발견과 원리
+  · HISTORY — 사건·제도의 기원과 유래, 시대적 배경, 역사적 변천 과정
+  · CULTURE — 사회 제도, 도시 시스템, 관습, 언어, 대중문화 등 사람들이 만들어 온 사회적 약속과 상징
+  · BUSINESS — 산업, 기업, 금융, 시장이 돌아가는 원리
+  · LIFESTYLE — 일상에서 바로 마주치는 실용적 궁금증, 생활 팁, 개인의 선택과 관련된 정보
+  판단 기준: "왜 이렇게 만들어졌는가·무엇을 상징하는가"에 가까우면 HISTORY나 CULTURE, "최신 기술/서비스가 어떻게 동작하는가"면 TECH, "당장 생활에 써먹을 정보"면 LIFESTYLE을 우선한다. 애매하면 그 주제가 신문의 어느 섹션에 실릴지 생각해서 고른다.
+- 표지 1장, 본문 4~7장(주제를 설명하는 데 필요한 만큼만, 무리하게 늘리거나 줄이지 말 것), KEY TAKEAWAY 1장, 마무리 1장
+- 표지 제목: 질문형, 최대 두 줄(줄바꿈은 \\n), 각 줄 12자 내외
+- 표지 부제: 15자 내외
+- 본문 제목: 반드시 한 줄, 10~12자 이내. 절대 넘기지 말 것
+- 본문 텍스트: 두 문장 이내, 반드시 "~다"로 끝나는 문어체(예: ~이다, ~한다, ~였다, ~보인다). "~습니다/~합니다" 같은 존댓말은 쓰지 않는다. 구체적인 숫자나 사실 포함
+- 본문 note: 본문에서 못 담은 부연설명 한 줄, 역시 "~다"체로 작성 (없으면 빈 문자열)
+- 본문 photoSrc: 사진 출처가 있으면 "기관명, 연도" 형식 (없으면 빈 문자열)
+- 본문 textSrc: 본문 내용의 출처가 있으면 "기관명, 연도" 형식 (없으면 빈 문자열)
+- KEY TAKEAWAY 텍스트: 한 줄 결론, 두 줄까지(줄바꿈 \\n), 각 줄 10자 내외, 역시 "~다"체
+- 마무리는 text를 빈 문자열로 둘 것
+- photoKeyword: 표지·본문·KEY TAKEAWAY 각 카드마다, 그 장표에 어울리는 사진을 찾을 때 쓸 검색어를 넣는다. 한국어 키워드와 영어 키워드를 슬래시(/)로 구분해 함께 적는다 (예: "순대국밥, 든든한 아침 / korean pork bone soup breakfast"). 의학·기술처럼 실사 사진이 어색한 주제는 "일러스트" 계열 키워드를 우선한다. 마무리(outro) 카드는 photoKeyword를 빈 문자열로 둔다.
+- caption: 인스타그램 게시물에 함께 올릴 캡션을 작성한다. 형식은 다음을 따른다:
+  · 첫 줄: 주제를 훅으로 던지는 문장 + 어울리는 이모지 1개. 핵심 단어는 작은따옴표로 강조
+  · 이어서 3~5문장: 카드 내용을 친근한 존댓말(합니다체·해요체 섞어도 됨)로 풀어서 설명. 문장 끝에 느낌표나 "~거죠!" 같은 대화체를 섞어도 좋다 (이 캡션만은 본문 카드와 달리 존댓말을 쓴다)
+  · 마지막 줄: 독자에게 말을 걸듯 마무리하는 한 문장 + 이모지 1개
+  · 그 다음 줄에 해시태그 6~8개를 띄어쓰기로 나열 (주제 직접 관련 태그부터 시작해 넓은 카테고리 태그 순서로)
+  줄바꿈은 \\n으로 표시한다. 아래는 형식을 보여주는 예시이며, 내용은 그대로 베끼지 말고 이번 주제에 맞게 새로 쓴다:
+  "매년 크고 작은 이유로 우리 몸이 겪는 방어 반응, '구토' 🤢\\n놀랍게도 구토는 위가 스스로 판단해서 하는 게 아니라, 뇌의 명령으로 시작됩니다.\\n연수(숨뇌)에 있는 '구토중추'가 여러 신호를 종합해 구토 여부를 결정하는 거죠!\\n혈액 속 독소, 심한 멀미, 상한 음식까지— 각기 다른 경로로 들어온 위험 신호가 결국 한 곳으로 모입니다.\\n몸이 위험을 감지하고 스스로를 지키기 위해 내리는 방어 명령, 그것이 바로 구토의 원리입니다.\\n속이 울렁거릴 때 몸속에서 무슨 일이 벌어지는지, 알고 나면 조금 다르게 보일 거예요! 😉\\n#구토 #인체의신비 #건강상식 #상식시리즈 #과학상식"
+
+오직 아래 JSON만 출력하라. 설명, 마크다운 코드펜스 금지. cards 배열 안의 body 항목 수는 4~7개 사이로 자유롭게 조절한다.
+{"category":"LIFESTYLE","cards":[
+{"type":"cover","title":"","sub":"","photoKeyword":""},
+{"type":"body","title":"","text":"","note":"","photoSrc":"","textSrc":"","photoKeyword":""},
+{"type":"takeaway","text":"","src":"","photoKeyword":""},
+{"type":"outro","text":"","photoKeyword":""}],
+"caption":""}`;
+}
+
+function applyDraft(raw){
+  const p=JSON.parse(String(raw).replace(/```json|```/g,'').trim());
+  if(!p.cards) throw new Error('cards가 없습니다');
+  if(CATS[p.category]){ state.cat=p.category; catSel.value=p.category;
+    document.documentElement.style.setProperty('--acc',CATS[p.category].acc); }
+  state.cards=p.cards.map(c=>Object.assign(blank(c.type),c,{img:null,imgUrl:''}));
+  state.caption=typeof p.caption==='string'?p.caption:'';
+  renderCaption();
+  renderEditor(); draw();
+}
+
+function renderCaption(){
+  const step=$('#captionStep'), box=$('#captionBox');
+  if(state.caption){
+    step.style.display='block';
+    box.value=state.caption;
+  }else{
+    step.style.display='none';
+  }
+}
+$('#captionBox').oninput=e=>{ state.caption=e.target.value; };
+$('#copyCaption').onclick=async()=>{
+  const st=$('#captionStatus');
+  try{
+    await navigator.clipboard.writeText($('#captionBox').value);
+    st.className='status'; st.textContent='캡션을 복사했습니다.';
+  }catch(e){
+    $('#captionBox').select();
+    st.className='status'; st.textContent='자동 복사가 막혀 있어 선택만 해두었습니다. Ctrl+C로 복사하세요.';
+  }
+};
+
+$('#gen').onclick=async()=>{
+  const topic=$('#topic').value.trim();
+  const st=$('#genStatus');
+  if(!topic){ st.className='status err'; st.textContent='먼저 주제를 적어주세요.'; return; }
+  const text=buildPrompt(topic);
+  try{
+    await navigator.clipboard.writeText(text);
+    st.className='status';
+    st.textContent='프롬프트를 복사했습니다. AI에 붙여넣고, 받은 JSON을 아래 칸에 붙여넣어주세요.';
+  }catch(e){
+    const ta=$('#jsonBox'); ta.value=text; ta.select();
+    st.className='status';
+    st.textContent='아래 칸에 프롬프트를 넣었습니다. 직접 복사해 AI에 전달한 뒤, 받은 JSON을 다시 붙여넣어주세요.';
+  }
+  $('#manualBox').style.display='block';
+};
+
+$('#copyPrompt').onclick=async()=>{
+  const topic=$('#topic').value.trim();
+  const st=$('#genStatus');
+  if(!topic){ st.className='status err'; st.textContent='먼저 주제를 적어주세요.'; return; }
+  const text=buildPrompt(topic);
+  try{
+    await navigator.clipboard.writeText(text);
+    st.className='status'; st.textContent='프롬프트를 복사했습니다. Claude에 붙여넣고, 받은 JSON을 아래 칸에 넣어주세요.';
+  }catch(e){
+    const ta=$('#jsonBox'); ta.value=text; ta.select();
+    st.className='status'; st.textContent='아래 칸에 프롬프트를 넣었습니다. 직접 복사해 사용하세요.';
+  }
+};
+
+$('#applyJson').onclick=()=>{
+  const st=$('#genStatus');
+  try{
+    applyDraft($('#jsonBox').value);
+    st.className='status'; st.textContent='초안을 적용했습니다. 문구·사진 검색어를 다듬고, 캡션은 3단계에서 확인하세요.';
+    $('#jsonBox').value='';
+  }catch(e){
+    st.className='status err'; st.textContent='JSON을 읽지 못했습니다 ('+e.message+').';
+  }
+};
+
+/* 시작 — 서체가 다 내려온 뒤에 그려야 미리보기와 파일이 같아집니다 */
+renderEditor(); draw();
+(async()=>{
+  const fams=['Nanum Gothic Coding','Nanum Myeongjo','Song Myung',
+              'Gowun Batang','Gowun Dodum','IBM Plex Sans KR'];
+  const jobs=[];
+  fams.forEach(f=>[400,500,600,700,800].forEach(w=>
+    jobs.push(document.fonts.load(`${w} 100px "${f}"`).catch(()=>{}))));
+  await Promise.all(jobs);
+  await document.fonts.ready;
+  draw();
+})();
+</script>
+</body>
+</html>

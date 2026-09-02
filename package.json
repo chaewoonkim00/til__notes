@@ -1,0 +1,13 @@
+{
+  "name": "til-notes-automation",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "generate": "node automation/generate.mjs"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.32.1",
+    "@notionhq/client": "^2.2.15",
+    "playwright": "^1.48.2"
+  }
+}
