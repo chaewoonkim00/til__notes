@@ -1,0 +1,45 @@
+name: Rerender Existing Cards
+
+# 템플릿/폰트 수정 후 이미 만들어둔 카드(project.json)를 다시 그려서
+# output/ 아래 PNG를 최신 상태로 갱신한다. 새 주제를 만들지도, Notion을
+# 건드리지도 않는다.
+
+on:
+  workflow_dispatch:
+    inputs:
+      dirs:
+        description: '다시 그릴 폴더 경로 (한 줄에 하나씩, 예: output/HISTORY/001_본적)'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  rerender:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - run: npx playwright install --with-deps chromium
+
+      - name: 카드 다시 그리기
+        run: |
+          while IFS= read -r dir; do
+            [ -z "$dir" ] && continue
+            node automation/rerender.mjs "$dir"
+          done <<< "${{ github.event.inputs.dirs }}"
+
+      - name: 변경사항 커밋 및 푸시
+        run: |
+          git config user.name "til-notes-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add output
+          git diff --cached --quiet || git commit -m "카드 다시 그리기 $(date +%F)"
+          git push
