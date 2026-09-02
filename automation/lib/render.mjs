@@ -16,6 +16,7 @@ export async function renderCards({ category, fileno, cards }) {
     process.env.PLAYWRIGHT_CHROMIUM_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_PATH } : {}
   );
   try {
+    const page = await browser.newPage();
     page.on('console', (msg) => console.log('[render:page]', msg.text()));
     page.on('pageerror', (err) => console.error('[render:pageerror]', err.message));
 
