@@ -1,0 +1,46 @@
+name: Fill Missing Photos
+
+# photoKeyword는 있는데 imgUrl이 비어 있는 카드(예: 사진 검색 API 키가 아직
+# 등록되기 전에 만들어진 초기 게시물)에 사진을 다시 채워 넣고 다시 그린다.
+
+on:
+  workflow_dispatch:
+    inputs:
+      dirs:
+        description: '사진을 채울 폴더 경로 (한 줄에 하나씩, 예: output/TECH/001_택시 미터기 작동원리)'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  fill:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - run: npx playwright install --with-deps chromium
+
+      - name: 사진 채우고 다시 그리기
+        env:
+          PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
+        run: |
+          while IFS= read -r dir; do
+            [ -z "$dir" ] && continue
+            node automation/fill-missing-photos.mjs "$dir"
+          done <<< "${{ github.event.inputs.dirs }}"
+
+      - name: 변경사항 커밋 및 푸시
+        run: |
+          git config user.name "til-notes-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add output
+          git diff --cached --quiet || git commit -m "누락된 사진 채우기 $(date +%F)"
+          git push
