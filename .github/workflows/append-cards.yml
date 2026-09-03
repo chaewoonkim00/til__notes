@@ -1,0 +1,46 @@
+name: Append Cards To Existing Post
+
+# AI 초안이 필수 카드(예: KEY TAKEAWAY, 마무리)를 빠뜨렸을 때, 이미 만들어둔
+# project.json에 카드를 추가하고 전체를 다시 그려서 output/ PNG를 갱신한다.
+
+on:
+  workflow_dispatch:
+    inputs:
+      dir:
+        description: '수정할 폴더 경로 (예: output/SCIENCE/001_맥주가 만들어지는 법)'
+        required: true
+      cardsJson:
+        description: '추가할 카드 배열(JSON). 예: [{"type":"takeaway","text":"...","photoKeyword":"..."}]'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  append:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - run: npx playwright install --with-deps chromium
+
+      - name: 카드 추가 및 다시 그리기
+        env:
+          PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
+        run: |
+          node automation/append-cards.mjs "${{ github.event.inputs.dir }}" '${{ github.event.inputs.cardsJson }}'
+
+      - name: 변경사항 커밋 및 푸시
+        run: |
+          git config user.name "til-notes-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add output
+          git diff --cached --quiet || git commit -m "카드 추가: ${{ github.event.inputs.dir }}"
+          git push
