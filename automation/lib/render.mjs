@@ -23,18 +23,25 @@ export async function renderCards({ category, fileno, cards }) {
     await page.goto('file://' + STUDIO_PATH);
     await page.waitForFunction(() => typeof window.render === 'function' || typeof render === 'function');
 
-    // studio.html 자체의 폰트 로딩 타이밍에 기대지 않고, 렌더링 전에 직접
-    // 모든 카테고리 폰트를 명시적으로 로드해서 기본 폰트로 대체되는 걸 막는다.
+    // 구글 폰트의 한글 웹폰트는 유니코드 구간별로 잘게 나뉘어 서버에서 내려온다.
+    // document.fonts.load(font)처럼 텍스트 없이 로드를 요청하면 브라우저는 어떤
+    // 구간이 필요한지 몰라 일부만 받아오고, 그 상태로 그리면 아직 안 받아온
+    // 구간의 글자만 다른(이미 로드된) 폰트로 조용히 대체되어 보인다 — 실제로
+    // 겪은 "문장 중간중간 글자만 두껍게 깨지는" 버그의 원인이었다.
+    // 현대 한글 음절 전체(11,172자)를 실제 텍스트로 넘겨 모든 구간을 강제로
+    // 받아오게 해서 이 문제를 막는다.
     const fontStatus = await page.evaluate(async () => {
       const fams = [
         'Nanum Gothic Coding', 'Nanum Myeongjo', 'Noto Serif KR',
         'Gowun Batang', 'Gowun Dodum', 'IBM Plex Sans KR',
       ];
       const weights = [400, 500, 600, 700, 800];
+      let allHangul = '';
+      for (let cp = 0xac00; cp <= 0xd7a3; cp++) allHangul += String.fromCodePoint(cp);
       const jobs = [];
       for (const f of fams) {
         for (const w of weights) {
-          jobs.push(document.fonts.load(`${w} 100px "${f}"`).catch(() => {}));
+          jobs.push(document.fonts.load(`${w} 100px "${f}"`, allHangul).catch(() => {}));
         }
       }
       await Promise.all(jobs);

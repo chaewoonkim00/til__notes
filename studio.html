@@ -1186,14 +1186,20 @@ $('#applyJson').onclick=()=>{
   }
 };
 
-/* 시작 — 서체가 다 내려온 뒤에 그려야 미리보기와 파일이 같아집니다 */
+/* 시작 — 서체가 다 내려온 뒤에 그려야 미리보기와 파일이 같아집니다.
+   구글 폰트의 한글은 유니코드 구간별로 나뉘어 내려오기 때문에, 텍스트 없이
+   폰트만 로드 요청하면 실제로 쓰는 글자의 구간이 안 받아져서 일부 글자만
+   다른 폰트로 대체되어 보일 수 있다. 현대 한글 음절 전체를 텍스트로 넘겨
+   모든 구간을 미리 받아온다. */
 renderEditor(); draw();
 (async()=>{
   const fams=['Nanum Gothic Coding','Nanum Myeongjo','Noto Serif KR',
               'Gowun Batang','Gowun Dodum','IBM Plex Sans KR'];
+  let allHangul='';
+  for(let cp=0xAC00; cp<=0xD7A3; cp++) allHangul+=String.fromCodePoint(cp);
   const jobs=[];
   fams.forEach(f=>[400,500,600,700,800].forEach(w=>
-    jobs.push(document.fonts.load(`${w} 100px "${f}"`).catch(()=>{}))));
+    jobs.push(document.fonts.load(`${w} 100px "${f}"`, allHangul).catch(()=>{}))));
   await Promise.all(jobs);
   await document.fonts.ready;
   draw();
